@@ -2,6 +2,8 @@ import pyflamegpu
 import sys, random, math, time
 import matplotlib.pyplot as plt
 from cuda import *
+import datetime # 1. 导入 datetime 模块
+
 
 def create_model():
     model = pyflamegpu.ModelDescription("punish")
@@ -69,6 +71,8 @@ def define_execution_order(model):
 
     layer = model.newLayer()
     layer.addAgentFunction("agent", "mutate")
+
+    # 将 addInitFunction 和 addStepFunction 放在 define_execution_order 函数的任何位置（只要在定义完相应的函数对象之后）都是可以的，并且它们会在 FLAMEGPU 框架控制下的正确时机被执行。
     model.addInitFunction(initfn())
     model.addStepFunction(stepfn())
 
@@ -82,7 +86,9 @@ def define_logs(model):
 #    log.logEnvironment("REPRODUCE_PREY_PROB")
     return log
 
-class stepfn(pyflamegpu.HostFunction):        
+class stepfn(pyflamegpu.HostFunction):    
+    # 模拟的每个时间步结束时，统计当前模拟状态下所有智能体采取合作、背叛和惩罚这三种行为的数量，并将这些数量作为环境的共享属性进行更新
+    # 获取这种全局状态信息
     def run(self, FLAMEGPU):
         agents = FLAMEGPU.agent("agent")
         cooperation = agents.countUInt("move", 0)
@@ -128,7 +134,7 @@ def define_runs(model):
     ## 设置为要测试的参数。
     runs = pyflamegpu.RunPlan(model)
     runs.setRandomSimulationSeed(123456)
-    runs.setSteps(10000)
+    runs.setSteps(2000)
 #    runs.setPropertyLerpRangeFloat("REPRODUCE_PREY_PROB", 0.05, 1.05)
     return runs
 
@@ -143,8 +149,16 @@ def initialise_simulation(seed):
     cuda_sim = pyflamegpu.CUDASimulation(model)
     cuda_sim.setStepLog(logs)
     cuda_sim.simulate(run)
+    # --- 开始修改 ---
+    # 2. 获取当前时间
+    now = datetime.datetime.now() 
+    # 3. 格式化时间字符串 (YYYYMMDDHHMM)
+    timestamp_str = now.strftime("%Y%m%d%H%M") 
+    # 4. 构造完整的文件名
+    log_filename = f"log{timestamp_str}.json" 
+
     cuda_sim.exportLog(
-  "log.json", # The file to output (must end '.json' or '.xml')
+  log_filename, # The file to output (must end '.json' or '.xml')
   True,       # Whether the step log should be included in the log file
   False,       # Whether the exit log should be included in the log file
   False,       # Whether the step time should be included in the log file (treated as false if step log not included)
