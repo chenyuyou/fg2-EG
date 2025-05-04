@@ -13,6 +13,10 @@ __pycache__/
 # result
 result/
 
+# picture
+.png
+
+
 # json
 *.json
 
