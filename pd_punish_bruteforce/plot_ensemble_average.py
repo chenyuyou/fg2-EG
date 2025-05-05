@@ -6,7 +6,7 @@ import numpy as np # Still useful for averaging
 import datetime
 
 # --- 1. Configuration ---
-results_dir = 'results'  # Directory containing the JSON log files
+results_dir = 'ensemble_results'  # Directory containing the JSON log files
 num_files_to_process = None # Set to an integer to limit files, or None to process all .json files
 
 # --- 生成唯一的输出文件名 ---

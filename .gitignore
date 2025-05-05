@@ -12,6 +12,7 @@ __pycache__/
 
 # result
 result/
+ensemble_results/
 
 # picture
 .png
